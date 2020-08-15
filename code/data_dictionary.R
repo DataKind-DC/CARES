@@ -6,7 +6,8 @@
 # Setup -------------------------------------------------------------------
 
 # Data prep should be performed first
-# source("code/ppp data script.R")
+# source("bin/ppp_data_merge.R")
+# based on source above, working directory should be: /DataKind-DC/CARES/
 
 library(tidyverse)
 library(lubridate)
@@ -64,17 +65,25 @@ sample(unique(adbs$Zip[(!adbs$Zip %in% sprintf("%05d", ztz$ZIP_CODE))]), 5) # th
 ### Data Check: State Names -----------------------------------------------
 # check against US Census data: American National Standards Institute (ANSI) Codes for States, the District of Columbia, Puerto Rico, and the Insular Areas of the United States
 #via: https://www.census.gov/library/reference/code-lists/ansi.html
-statecodes <- read.table("../data/census/state.txt", sep = "|", header = TRUE)
+statecodes <- read.table("data/census/state.txt", sep = "|", header = TRUE)
 
 table(adbs$State[(!adbs$State %in% statecodes$STUSAB)]) # list counts of unmatched results, showing 1 AE, 1 FI, 210 XX
 
 adbs[adbs$State == "FI",] # based on the ZIP code, this should be FL, and can be 'fixed' easily enough as part of final data cleaning
 adbs[adbs$State == "AE",] # when viewing ZIP, Lending data, this does indeed appear to be tied to a military address in Europe, Middle East, Africa or Canada
 
+# check how the State field validates against the filename (source State)
+adbs %>% 
+  filter(State != str_remove_all(source_file, "^.*- \\s*|\\s*.csv.*$")) %>% 
+    subset(select=c("State","source_file")) %>% 
+      ftable()  
+# we see that the only source files with unmatched values are 150kplus and Other, which is coherent
+# interestingly, entries with state value XX appear in both the 150kplus and the Other source files
+
 
 ### Data Check: City Names -------------------------------------------------
 # check City values against a large list of likely names, via: https://simplemaps.com/data/us-cities
-uscities <- read.csv("../data/simplemaps_uscities_basicv1.6/uscities.csv")
+uscities <- read.csv("data/simplemaps_uscities_basicv1.6/uscities.csv")
 
 citydict <- sort(unique(tolower(gsub("[[:digit:][:space:][:punct:]]", "", uscities$city))))
 adbscities <- sort(unique(tolower(gsub("[[:digit:][:space:][:punct:]]", "", adbs$City))))
