@@ -13,7 +13,6 @@ library(lubridate)
 library(knitr)
 library(stringdist) # for fuzzy matching
 library(tidyr)
-library(hash)
 
 # Summaries ---------------------------------------------------------------
 
